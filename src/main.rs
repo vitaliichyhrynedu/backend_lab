@@ -1,5 +1,6 @@
 use std::env;
 
+use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection};
 
 mod models;
@@ -17,8 +18,13 @@ async fn main() {
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let db = Database::connect(&db_url)
         .await
-        .expect("database connection failed");
+        .expect("failed to connect to database");
     eprintln!("database connection established");
+
+    Migrator::up(&db, None)
+        .await
+        .expect("failed to apply pending migrations");
+    eprintln!("pending migrations applied");
 
     let state = AppState { db };
     let router = routes::router().with_state(state);
