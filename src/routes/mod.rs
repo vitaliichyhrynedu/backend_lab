@@ -1,8 +1,10 @@
 use axum::{Router, routing::get};
 
-pub mod health;
+use crate::AppState;
 
-pub fn router() -> Router {
+mod health;
+
+pub fn router() -> Router<AppState> {
     let health = health::router();
 
     Router::new()

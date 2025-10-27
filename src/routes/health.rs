@@ -2,6 +2,8 @@ use axum::{Json, Router, http::StatusCode, routing::get};
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 
+use crate::AppState;
+
 #[derive(Serialize)]
 pub struct Health {
     status: Status,
@@ -15,7 +17,7 @@ enum Status {
     Down,
 }
 
-pub fn router() -> Router {
+pub fn router() -> Router<AppState> {
     Router::new().route("/", get(get_health))
 }
 
