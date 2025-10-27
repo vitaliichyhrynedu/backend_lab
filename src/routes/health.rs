@@ -1,30 +1,30 @@
-use axum::{Json, Router, http::StatusCode, routing::get};
-use chrono::{DateTime, Utc};
-use serde::Serialize;
+use axum::{Router, extract::State, routing::get};
+use chrono::Utc;
+use sea_orm::DatabaseConnection;
 
-use crate::AppState;
-
-#[derive(Serialize)]
-pub struct Health {
-    status: Status,
-    observed_at: DateTime<Utc>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "lowercase")]
-enum Status {
-    Up,
-    Down,
-}
+use crate::{AppState, models::health::*};
 
 pub fn router() -> Router<AppState> {
     Router::new().route("/", get(get_health))
 }
 
-pub async fn get_health() -> (StatusCode, Json<Health>) {
-    let health = Health {
-        status: Status::Up,
-        observed_at: Utc::now(),
+async fn get_health(State(state): State<AppState>) -> Health {
+    let services = Services {
+        db: check_db(&state.db).await,
     };
-    (StatusCode::OK, Json(health))
+    Health {
+        status: services.health(),
+        observed_at: Utc::now(),
+        services,
+    }
+}
+
+async fn check_db(db: &DatabaseConnection) -> Status {
+    match db.ping().await {
+        Ok(_) => Status::Up,
+        Err(e) => {
+            eprintln!("database ping failed: {e}");
+            Status::Down
+        }
+    }
 }
