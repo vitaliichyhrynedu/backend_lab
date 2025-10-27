@@ -12,5 +12,6 @@ async fn main() {
     let address = format!("0.0.0.0:{port}");
 
     let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+    eprintln!("listening on http://localhost:{port}");
     axum::serve(listener, router).await.unwrap();
 }
