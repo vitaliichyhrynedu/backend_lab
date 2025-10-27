@@ -5,4 +5,18 @@ services:
     ports:
       - ${PORT}:${PORT}
     environment:
-      - PORT=${PORT}
+      PORT: ${PORT}
+      DATABASE_URL: ${DATABASE_DOCKER_URL}
+
+  postgres:
+    image: postgres:18
+    ports:
+      - ${DATABASE_PORT}:${DATABASE_PORT}
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASS}
+    volumes:
+          - pgdata:/var/lib/postgresql
+
+volumes:
+  pgdata:
