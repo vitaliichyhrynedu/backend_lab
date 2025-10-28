@@ -46,7 +46,7 @@ pub async fn create_record(
                     errors.push(("category", "category doesn't exist"))
                 }
                 if e.contains("fk_record_currency") {
-                    errors.push(("currency_code", "currency_code doesn't exist"))
+                    errors.push(("currency_code", "currency doesn't exist"))
                 }
                 AppError::unprocessable_entity(errors)
             }
