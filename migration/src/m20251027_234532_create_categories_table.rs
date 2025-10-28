@@ -12,7 +12,7 @@ impl MigrationTrait for Migration {
                     .table(Category::Table)
                     .if_not_exists()
                     .col(pk_uuid(Category::Id))
-                    .col(string(Category::Name))
+                    .col(string_uniq(Category::Name))
                     .to_owned(),
             )
             .await

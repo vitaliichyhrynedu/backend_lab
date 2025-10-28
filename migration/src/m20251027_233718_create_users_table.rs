@@ -12,7 +12,7 @@ impl MigrationTrait for Migration {
                     .table(User::Table)
                     .if_not_exists()
                     .col(pk_uuid(User::Id))
-                    .col(string(User::Name))
+                    .col(string_uniq(User::Name))
                     .to_owned(),
             )
             .await
