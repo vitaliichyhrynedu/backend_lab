@@ -50,3 +50,14 @@ pub async fn get_users(db: &DatabaseConnection) -> Result<Vec<User>, AppError> {
         .collect();
     Ok(users)
 }
+
+pub async fn get_default_currency_code(
+    db: &DatabaseConnection,
+    id: Uuid,
+) -> Result<String, AppError> {
+    let user = user::Entity::find_by_id(id)
+        .one(db)
+        .await?
+        .ok_or_else(|| AppError::unprocessable_entity([("user_id", "user doesn't exist")]))?;
+    Ok(user.default_currency_code)
+}
