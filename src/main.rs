@@ -6,6 +6,7 @@ use sea_orm::{Database, DatabaseConnection};
 mod error;
 mod models;
 mod routes;
+mod services;
 
 #[derive(Clone)]
 struct AppState {
