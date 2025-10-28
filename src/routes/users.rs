@@ -6,7 +6,7 @@ use axum::{
 };
 use uuid::Uuid;
 
-use crate::{AppState, database::Table, models::user::*};
+use crate::{AppState, error::AppError, models::user::*, services};
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -17,49 +17,31 @@ pub fn router() -> Router<AppState> {
 async fn get_user(
     State(AppState { db }): State<AppState>,
     Path(id): Path<Uuid>,
-) -> Json<UserBody<User>> {
-    let db = db.read().await;
-    let table = match db.get("users") {
-        Some(Table::Users(table)) => table,
-        _ => panic!("'users' table not found or has wrong type"),
-    };
-    let user = table.get(&id).unwrap().clone();
-    Json(UserBody { user })
+) -> Result<Json<UserBody<User>>, AppError> {
+    let user = services::user::get_user(&db, id).await?;
+    Ok(Json(UserBody { user }))
 }
 
 async fn create_user(
     State(AppState { db }): State<AppState>,
     Json(UserBody { user }): Json<UserBody<UserCreate>>,
-) -> (StatusCode, Json<UserBody<User>>) {
-    let mut db = db.write().await;
-    let table = match db.get_mut("users") {
-        Some(Table::Users(table)) => table,
-        _ => panic!("'users' table not found or has wrong type"),
-    };
-    let user = User {
-        id: Uuid::new_v4(),
-        name: user.name,
-    };
-    table.insert(user.id, user.clone());
-    (StatusCode::CREATED, Json(UserBody { user }))
+) -> Result<(StatusCode, Json<UserBody<User>>), AppError> {
+    user.validate()?;
+    let user = services::user::create_user(&db, user).await?;
+    Ok((StatusCode::CREATED, Json(UserBody { user })))
 }
 
-async fn delete_user(State(AppState { db }): State<AppState>, Path(id): Path<Uuid>) -> StatusCode {
-    let mut db = db.write().await;
-    let table = match db.get_mut("users") {
-        Some(Table::Users(table)) => table,
-        _ => panic!("'users' table not found or has wrong type"),
-    };
-    table.remove(&id);
-    StatusCode::NO_CONTENT
+async fn delete_user(
+    State(AppState { db }): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<StatusCode, AppError> {
+    services::user::delete_user(&db, id).await?;
+    Ok(StatusCode::NO_CONTENT)
 }
 
-async fn get_users(State(AppState { db }): State<AppState>) -> Json<UsersBody<User>> {
-    let db = db.read().await;
-    let table = match db.get("users") {
-        Some(Table::Users(table)) => table,
-        _ => panic!("'users' table not found or has wrong type"),
-    };
-    let users = table.values().cloned().collect();
-    Json(UsersBody { users })
+async fn get_users(
+    State(AppState { db }): State<AppState>,
+) -> Result<Json<UsersBody<User>>, AppError> {
+    let users = services::user::get_users(&db).await?;
+    Ok(Json(UsersBody { users }))
 }
