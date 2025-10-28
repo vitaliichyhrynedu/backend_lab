@@ -6,7 +6,7 @@ use axum::{
 };
 use uuid::Uuid;
 
-use crate::{AppState, database::Table, models::category::*};
+use crate::{AppState, error::AppError, models::category::*, services};
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -17,52 +17,31 @@ pub fn router() -> Router<AppState> {
 async fn get_category(
     State(AppState { db }): State<AppState>,
     Path(id): Path<Uuid>,
-) -> Json<CategoryBody<Category>> {
-    let db = db.read().await;
-    let table = match db.get("categories") {
-        Some(Table::Categories(table)) => table,
-        _ => panic!("'categories' table not found or has wrong type"),
-    };
-    let category = table.get(&id).unwrap().clone();
-    Json(CategoryBody { category })
+) -> Result<Json<CategoryBody<Category>>, AppError> {
+    let category = services::category::get_category(&db, id).await?;
+    Ok(Json(CategoryBody { category }))
 }
 
 async fn create_category(
     State(AppState { db }): State<AppState>,
     Json(CategoryBody { category }): Json<CategoryBody<CategoryCreate>>,
-) -> (StatusCode, Json<CategoryBody<Category>>) {
-    let mut db = db.write().await;
-    let table = match db.get_mut("categories") {
-        Some(Table::Categories(table)) => table,
-        _ => panic!("'categories' table not found or has wrong type"),
-    };
-    let category = Category {
-        id: Uuid::new_v4(),
-        name: category.name,
-    };
-    table.insert(category.id, category.clone());
-    (StatusCode::CREATED, Json(CategoryBody { category }))
+) -> Result<(StatusCode, Json<CategoryBody<Category>>), AppError> {
+    category.validate()?;
+    let category = services::category::create_category(&db, category).await?;
+    Ok((StatusCode::CREATED, Json(CategoryBody { category })))
 }
 
 async fn delete_category(
     State(AppState { db }): State<AppState>,
     Path(id): Path<Uuid>,
-) -> StatusCode {
-    let mut db = db.write().await;
-    let table = match db.get_mut("categories") {
-        Some(Table::Categories(table)) => table,
-        _ => panic!("'categories' table not found or has wrong type"),
-    };
-    table.remove(&id);
-    StatusCode::NO_CONTENT
+) -> Result<StatusCode, AppError> {
+    services::category::delete_category(&db, id).await?;
+    Ok(StatusCode::NO_CONTENT)
 }
 
-async fn get_categories(State(AppState { db }): State<AppState>) -> Json<CategoriesBody<Category>> {
-    let db = db.read().await;
-    let table = match db.get("categories") {
-        Some(Table::Categories(table)) => table,
-        _ => panic!("'categories' table not found or has wrong type"),
-    };
-    let categories = table.values().cloned().collect();
-    Json(CategoriesBody { categories })
+async fn get_categories(
+    State(AppState { db }): State<AppState>,
+) -> Result<Json<CategoriesBody<Category>>, AppError> {
+    let categories = services::category::get_categories(&db).await?;
+    Ok(Json(CategoriesBody { categories }))
 }
