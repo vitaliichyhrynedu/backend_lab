@@ -4,6 +4,7 @@ mod m20251027_233718_create_users_table;
 mod m20251027_234532_create_categories_table;
 mod m20251027_234708_create_records_table;
 mod m20251028_001126_create_currency_table;
+mod m20251028_011150_add_default_currency_code_to_user_table;
 
 pub struct Migrator;
 
@@ -15,6 +16,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20251027_234532_create_categories_table::Migration),
             Box::new(m20251027_234708_create_records_table::Migration),
             Box::new(m20251028_001126_create_currency_table::Migration),
+            Box::new(m20251028_011150_add_default_currency_code_to_user_table::Migration),
         ]
     }
 }
