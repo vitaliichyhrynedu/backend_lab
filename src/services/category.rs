@@ -1,5 +1,5 @@
 use entity::category;
-use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, EntityTrait};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, EntityTrait, SqlErr};
 use uuid::Uuid;
 
 use crate::{error::AppError, models::category::*};
@@ -21,7 +21,20 @@ pub async fn create_category(
         id: Set(Uuid::new_v4()),
         name: Set(category.name),
     };
-    let category = category.insert(db).await?.into();
+    let category = category
+        .insert(db)
+        .await
+        .map_err(|e| match e.sql_err() {
+            Some(SqlErr::UniqueConstraintViolation(e)) => {
+                let mut errors = Vec::new();
+                if e.contains("category_name_key") {
+                    errors.push(("name", "category already exists"));
+                }
+                AppError::unprocessable_entity(errors)
+            }
+            _ => e.into(),
+        })?
+        .into();
     Ok(category)
 }
 

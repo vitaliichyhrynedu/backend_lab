@@ -23,10 +23,20 @@ pub async fn create_user(db: &DatabaseConnection, user: UserCreate) -> Result<Us
         .insert(db)
         .await
         .map_err(|e| match e.sql_err() {
-            Some(SqlErr::ForeignKeyConstraintViolation(_)) => AppError::unprocessable_entity([(
-                "default_currency_code",
-                "currency code doesn't exist",
-            )]),
+            Some(SqlErr::UniqueConstraintViolation(e)) => {
+                let mut errors = Vec::new();
+                if e.contains("user_name_key") {
+                    errors.push(("name", "user already exists"));
+                }
+                AppError::unprocessable_entity(errors)
+            }
+            Some(SqlErr::ForeignKeyConstraintViolation(e)) => {
+                let mut errors = Vec::new();
+                if e.contains("fk_user_currency") {
+                    errors.push(("default_currency_code", "currency doesn't exist"));
+                }
+                AppError::unprocessable_entity(errors)
+            }
             _ => e.into(),
         })?
         .into();
