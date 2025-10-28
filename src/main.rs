@@ -3,6 +3,7 @@ use std::env;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection};
 
+mod error;
 mod models;
 mod routes;
 
