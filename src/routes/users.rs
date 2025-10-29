@@ -11,7 +11,7 @@ use crate::{AppState, error::AppError, models::user::*, services};
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/", get(get_users).post(create_user))
-        .route("/{user_id}", get(get_user).delete(delete_user))
+        .route("/{id}", get(get_user).delete(delete_user))
 }
 
 async fn get_user(

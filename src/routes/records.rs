@@ -11,7 +11,7 @@ use crate::{AppState, error::AppError, models::record::*, services};
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/", get(filter_records).post(create_record))
-        .route("/{record_id}", get(get_record).delete(delete_record))
+        .route("/{id}", get(get_record).delete(delete_record))
 }
 
 async fn get_record(

@@ -11,7 +11,7 @@ use crate::{AppState, error::AppError, models::category::*, services};
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/", get(get_categories).post(create_category))
-        .route("/{category_id}", get(get_category).delete(delete_category))
+        .route("/{id}", get(get_category).delete(delete_category))
 }
 
 async fn get_category(
