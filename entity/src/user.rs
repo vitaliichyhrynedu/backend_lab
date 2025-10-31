@@ -10,6 +10,8 @@ pub struct Model {
     #[sea_orm(unique)]
     pub name: String,
     pub default_currency_code: String,
+    pub password_hash: String,
+    pub salt: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
